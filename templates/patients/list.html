@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Patients — MaternaHealth{% endblock %}
+
+{% block content %}
+
+<!-- Page header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="mb-0 fw-bold">Patients</h2>
+    <small class="text-muted">{{ patients|length }} record{{ 's' if patients|length != 1 }}</small>
+  </div>
+  <a href="{{ url_for('patients.create_patient') }}" class="btn btn-sm"
+     style="background-color:#7a3e52; color:#fff;">
+    <i class="bi bi-person-plus"></i> Add Patient
+  </a>
+</div>
+
+{% if patients %}
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead style="background-color:#f3eaee;">
+            <tr>
+              <th>#</th>
+              <th>Full Name</th>
+              <th>Date of Birth</th>
+              <th>Blood Type</th>
+              <th>Contact</th>
+              <th>Registered</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in patients %}
+            <tr>
+              <td class="text-muted">{{ p.id }}</td>
+              <td class="fw-semibold">{{ p.full_name }}</td>
+              <td>{{ p.date_of_birth.strftime('%d %b %Y') if p.date_of_birth }}</td>
+              <td>
+                {% if p.blood_type %}
+                  <span class="badge rounded-pill text-bg-secondary">{{ p.blood_type }}</span>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td>{{ p.contact_info or '—' }}</td>
+              <td class="text-muted">{{ p.created_at.strftime('%d %b %Y') }}</td>
+              <td class="text-end">
+                <a href="{{ url_for('patients.patient_detail', patient_id=p.id) }}"
+                   class="btn btn-sm btn-outline-secondary">
+                  <i class="bi bi-eye"></i> View
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+{% else %}
+  <!-- Empty state -->
+  <div class="text-center py-5 text-muted">
+    <i class="bi bi-people" style="font-size:3rem; color:#c9a0b0;"></i>
+    <p class="mt-3 mb-1 fs-5">No patients yet</p>
+    <p class="mb-3">Start by adding your first patient record.</p>
+    <a href="{{ url_for('patients.create_patient') }}"
+       class="btn" style="background-color:#7a3e52; color:#fff;">
+      <i class="bi bi-person-plus"></i> Add First Patient
+    </a>
+  </div>
+{% endif %}
+
+{% endblock %}

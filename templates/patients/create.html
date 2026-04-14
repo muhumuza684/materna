@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Add Patient — MaternaHealth{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a href="{{ url_for('patients.list_patients') }}" class="text-decoration-none">Patients</a>
+    </li>
+    <li class="breadcrumb-item active">Add New Patient</li>
+  </ol>
+</nav>
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+
+    <div class="card shadow-sm border-0">
+      <div class="card-header py-3" style="background-color:#7a3e52;">
+        <h5 class="mb-0 text-white">
+          <i class="bi bi-person-plus"></i> New Patient Record
+        </h5>
+      </div>
+
+      <div class="card-body p-4">
+        <form method="POST" action="{{ url_for('patients.create_patient') }}" novalidate>
+
+          <!-- ── Section: Personal Information ──────────────────────── -->
+          <h6 class="text-uppercase text-muted fw-semibold mb-3"
+              style="font-size:.75rem; letter-spacing:.08em;">
+            Personal Information
+          </h6>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-8">
+              <label class="form-label fw-semibold" for="full_name">
+                Full Name <span class="text-danger">*</span>
+              </label>
+              <input
+                type="text" id="full_name" name="full_name"
+                class="form-control"
+                value="{{ form.get('full_name', '') }}"
+                placeholder="e.g. Amara Osei"
+                required
+              />
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="date_of_birth">
+                Date of Birth <span class="text-danger">*</span>
+              </label>
+              <input
+                type="date" id="date_of_birth" name="date_of_birth"
+                class="form-control"
+                value="{{ form.get('date_of_birth', '') }}"
+                required
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="blood_type">Blood Type</label>
+              <select id="blood_type" name="blood_type" class="form-select">
+                <option value="">— Select —</option>
+                {% for bt in ['A+','A-','B+','B-','AB+','AB-','O+','O-'] %}
+                  <option value="{{ bt }}"
+                    {{ 'selected' if form.get('blood_type') == bt }}>
+                    {{ bt }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="contact_info">Contact Info</label>
+              <input
+                type="text" id="contact_info" name="contact_info"
+                class="form-control"
+                value="{{ form.get('contact_info', '') }}"
+                placeholder="Phone / email / address"
+              />
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-semibold" for="emergency_contact">
+                Emergency Contact
+              </label>
+              <input
+                type="text" id="emergency_contact" name="emergency_contact"
+                class="form-control"
+                value="{{ form.get('emergency_contact', '') }}"
+                placeholder="Name and phone number"
+              />
+            </div>
+          </div>
+
+          <hr class="my-4" />
+
+          <!-- ── Section: Clinical Information ──────────────────────── -->
+          <h6 class="text-uppercase text-muted fw-semibold mb-3"
+              style="font-size:.75rem; letter-spacing:.08em;">
+            Clinical Information
+          </h6>
+
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label fw-semibold" for="medical_history">
+                Medical History
+              </label>
+              <textarea
+                id="medical_history" name="medical_history"
+                class="form-control" rows="3"
+                placeholder="Relevant past conditions, surgeries, hospitalisations…"
+              >{{ form.get('medical_history', '') }}</textarea>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="allergies">Allergies</label>
+              <textarea
+                id="allergies" name="allergies"
+                class="form-control" rows="2"
+                placeholder="Drug, food, or environmental allergies…"
+              >{{ form.get('allergies', '') }}</textarea>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="medications">
+                Current Medications
+              </label>
+              <textarea
+                id="medications" name="medications"
+                class="form-control" rows="2"
+                placeholder="List medications and dosages…"
+              >{{ form.get('medications', '') }}</textarea>
+            </div>
+          </div>
+
+          <!-- ── Actions ─────────────────────────────────────────────── -->
+          <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+            <a href="{{ url_for('patients.list_patients') }}"
+               class="btn btn-outline-secondary">
+              Cancel
+            </a>
+            <button type="submit" class="btn text-white"
+                    style="background-color:#7a3e52;">
+              <i class="bi bi-check-lg"></i> Save Patient
+            </button>
+          </div>
+
+        </form>
+      </div><!-- /card-body -->
+    </div><!-- /card -->
+
+  </div>
+</div>
+
+{% endblock %}

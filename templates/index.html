@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Home — MaternaHealth{% endblock %}
+{% block content %}
+<div class="text-center py-5">
+  <h1 class="fw-bold mb-2" style="color:#7a3e52;">Maternal Health Management System</h1>
+  <p class="text-muted mb-4 fs-5">A secure platform for managing maternal healthcare records.</p>
+  <a href="{{ url_for('patients.list_patients') }}" class="btn btn-lg text-white" style="background-color:#7a3e52;">
+    <i class="bi bi-people"></i> View Patients
+  </a>
+</div>
+{% endblock %}

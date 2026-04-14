@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Add Pregnancy — {{ patient.full_name }} — MaternaHealth{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a href="{{ url_for('patients.list_patients') }}" class="text-decoration-none">Patients</a>
+    </li>
+    <li class="breadcrumb-item">
+      <a href="{{ url_for('patients.patient_detail', patient_id=patient.id) }}"
+         class="text-decoration-none">{{ patient.full_name }}</a>
+    </li>
+    <li class="breadcrumb-item active">Add Pregnancy Record</li>
+  </ol>
+</nav>
+
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+
+    <!-- Patient context banner -->
+    <div class="alert border-0 mb-4 d-flex align-items-center gap-3 py-3"
+         style="background-color:#f3eaee;">
+      <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 fw-bold"
+           style="width:40px; height:40px; background:#7a3e52; color:#fff; font-size:1rem;">
+        {{ patient.full_name[0].upper() }}
+      </div>
+      <div class="lh-sm">
+        <div class="fw-semibold">{{ patient.full_name }}</div>
+        <small class="text-muted">
+          {% if patient.blood_type %}Blood type: {{ patient.blood_type }} &nbsp;·&nbsp;{% endif %}
+          {% if patient.date_of_birth %}DOB: {{ patient.date_of_birth.strftime('%d %b %Y') }}{% endif %}
+        </small>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header py-3" style="background-color:#7a3e52;">
+        <h5 class="mb-0 text-white">
+          <i class="bi bi-journal-medical"></i> New Pregnancy Record
+        </h5>
+      </div>
+
+      <div class="card-body p-4">
+        <form method="POST"
+              action="{{ url_for('pregnancies.create_pregnancy', patient_id=patient.id) }}"
+              novalidate>
+
+          <!-- ── Dates ──────────────────────────────────────────────── -->
+          <h6 class="text-uppercase text-muted fw-semibold mb-3"
+              style="font-size:.72rem; letter-spacing:.08em;">Obstetric Dates</h6>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="lmp">
+                Last Menstrual Period (LMP) <span class="text-danger">*</span>
+              </label>
+              <input type="date" id="lmp" name="last_menstrual_period"
+                     class="form-control"
+                     value="{{ form.get('last_menstrual_period', '') }}"
+                     required />
+              <div class="form-text">First day of the last period</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="edd">
+                Estimated Due Date (EDD)
+              </label>
+              <input type="date" id="edd" name="estimated_due_date"
+                     class="form-control"
+                     value="{{ form.get('estimated_due_date', '') }}" />
+              <div class="form-text">Leave blank if not yet calculated</div>
+            </div>
+          </div>
+
+          <hr class="my-4" />
+
+          <!-- ── Gestational Info ───────────────────────────────────── -->
+          <h6 class="text-uppercase text-muted fw-semibold mb-3"
+              style="font-size:.72rem; letter-spacing:.08em;">Gestational Information</h6>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="ga_weeks">
+                Gestational Age (weeks)
+              </label>
+              <input type="number" id="ga_weeks" name="gestational_age_weeks"
+                     class="form-control" min="1" max="45"
+                     value="{{ form.get('gestational_age_weeks', '') }}"
+                     placeholder="e.g. 12" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="trimester">Trimester</label>
+              <select id="trimester" name="trimester" class="form-select">
+                <option value="">— Select —</option>
+                {% for t, label in [(1,'1st Trimester (weeks 1–12)'),
+                                    (2,'2nd Trimester (weeks 13–26)'),
+                                    (3,'3rd Trimester (weeks 27–40)')] %}
+                  <option value="{{ t }}"
+                    {{ 'selected' if form.get('trimester')|string == t|string }}>
+                    {{ label }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <hr class="my-4" />
+
+          <!-- ── Risk & Status ─────────────────────────────────────── -->
+          <h6 class="text-uppercase text-muted fw-semibold mb-3"
+              style="font-size:.72rem; letter-spacing:.08em;">Risk & Status</h6>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Risk Level</label>
+              <div class="d-flex gap-2 flex-wrap">
+                {% for level, color in [('Low','success'), ('Medium','warning'), ('High','danger')] %}
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio"
+                           name="risk_level" id="risk_{{ level }}"
+                           value="{{ level }}"
+                           {{ 'checked' if form.get('risk_level', 'Low') == level }} />
+                    <label class="form-check-label" for="risk_{{ level }}">
+                      <span class="badge text-bg-{{ color }}">{{ level }}</span>
+                    </label>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Pregnancy Status</label>
+              <div class="d-flex gap-3">
+                {% for s in ['Active', 'Completed'] %}
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio"
+                           name="status" id="status_{{ s }}"
+                           value="{{ s }}"
+                           {{ 'checked' if form.get('status', 'Active') == s }} />
+                    <label class="form-check-label" for="status_{{ s }}">{{ s }}</label>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Actions ──────────────────────────────────────────── -->
+          <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+            <a href="{{ url_for('patients.patient_detail', patient_id=patient.id) }}"
+               class="btn btn-outline-secondary">
+              Cancel
+            </a>
+            <button type="submit" class="btn text-white"
+                    style="background-color:#7a3e52;">
+              <i class="bi bi-check-lg"></i> Save Record
+            </button>
+          </div>
+
+        </form>
+      </div><!-- /card-body -->
+    </div><!-- /card -->
+
+  </div>
+</div>
+
+{% endblock %}

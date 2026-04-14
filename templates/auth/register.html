@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register User — MaternaHealth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:          #0d1117;
+      --surface:     #161b22;
+      --surface-2:   #1c2430;
+      --border:      #30363d;
+      --accent:      #3fb68b;
+      --accent-dim:  #2a8f6e;
+      --accent-glow: rgba(63,182,139,.15);
+      --danger:      #f85149;
+      --warning:     #d29922;
+      --info:        #58a6ff;
+      --text:        #e6edf3;
+      --text-muted:  #8b949e;
+      --radius:      10px;
+      --font-body:   'DM Sans', sans-serif;
+      --font-display:'DM Serif Display', serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 480px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem 2.75rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      margin-bottom: 2rem;
+      font-size: .85rem;
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+    .brand-icon {
+      width: 28px; height: 28px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      font-size: .9rem;
+    }
+
+    .form-heading {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      margin-bottom: .35rem;
+    }
+    .form-sub {
+      color: var(--text-muted);
+      font-size: .875rem;
+      margin-bottom: 2rem;
+    }
+
+    .alert {
+      padding: .75rem 1rem;
+      border-radius: var(--radius);
+      font-size: .85rem;
+      margin-bottom: 1.25rem;
+      border-left: 3px solid;
+    }
+    .alert-danger  { background: rgba(248,81,73,.1);  border-color: var(--danger);  color: #ffa5a1; }
+    .alert-success { background: rgba(63,182,139,.1); border-color: var(--accent);  color: #7edcbc; }
+    .alert-warning { background: rgba(210,153,34,.1); border-color: var(--warning); color: #f0c060; }
+    .alert-info    { background: rgba(88,166,255,.1); border-color: var(--info);    color: #9ecfff; }
+
+    .form-group { margin-bottom: 1.2rem; }
+
+    label {
+      display: block;
+      font-size: .78rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: .4rem;
+    }
+
+    input, select {
+      width: 100%;
+      padding: .75rem 1rem;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: .93rem;
+      transition: border-color .2s, box-shadow .2s;
+      outline: none;
+      appearance: none;
+    }
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    input::placeholder { color: var(--text-muted); opacity: .6; }
+
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '▾';
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+      font-size: .8rem;
+    }
+    select option { background: var(--surface-2); }
+
+    /* Role badge preview */
+    .role-info {
+      margin-top: .6rem;
+      padding: .6rem .9rem;
+      background: var(--surface-2);
+      border-radius: 8px;
+      border-left: 3px solid var(--accent);
+      font-size: .8rem;
+      color: var(--text-muted);
+      min-height: 2.4rem;
+      transition: opacity .2s;
+    }
+
+    .password-hint {
+      font-size: .75rem;
+      color: var(--text-muted);
+      margin-top: .35rem;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: .85rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--font-body);
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s, transform .1s;
+      margin-top: .75rem;
+    }
+    .btn-primary:hover  { background: var(--accent-dim); }
+    .btn-primary:active { transform: scale(.98); }
+
+    .form-footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: .85rem;
+      color: var(--text-muted);
+    }
+    .form-footer a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    .form-footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <!-- Brand -->
+  <a href="{{ url_for('auth.login') }}" class="brand">
+    <div class="brand-icon">🩺</div>
+    MaternaHealth
+  </a>
+
+  <h2 class="form-heading">Create account</h2>
+  <p class="form-sub">Add a new user to the clinical system.</p>
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <form method="POST" action="{{ url_for('auth.register') }}">
+
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input
+        type="text"
+        id="username"
+        name="username"
+        placeholder="e.g. dr_amara"
+        required
+        autocomplete="username"
+        autofocus
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="role">Role</label>
+      <div class="select-wrap">
+        <select id="role" name="role" onchange="updateRoleInfo(this.value)">
+          {% for r in roles %}
+            <option value="{{ r }}">{{ r }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="role-info" id="role-info">
+        Full access to all patient data, records, and reports.
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input
+        type="password"
+        id="password"
+        name="password"
+        placeholder="Minimum 8 characters"
+        required
+        autocomplete="new-password"
+      />
+      <div class="password-hint">Must be at least 8 characters long.</div>
+    </div>
+
+    <div class="form-group">
+      <label for="confirm_password">Confirm Password</label>
+      <input
+        type="password"
+        id="confirm_password"
+        name="confirm_password"
+        placeholder="Repeat password"
+        required
+        autocomplete="new-password"
+      />
+    </div>
+
+    <button type="submit" class="btn-primary">Create User →</button>
+  </form>
+
+  <div class="form-footer">
+    <a href="{{ url_for('auth.login') }}">← Back to sign in</a>
+  </div>
+</div>
+
+<script>
+  const roleDescriptions = {
+    Admin:  "Full system access: manage users, patients, records, and all reports.",
+    Doctor: "Full patient access: view & edit records, labs, vitals, and reports.",
+    Nurse:  "Can add vitals, labs, and appointments. Cannot delete data or view reports.",
+  };
+
+  function updateRoleInfo(role) {
+    const el = document.getElementById("role-info");
+    el.textContent = roleDescriptions[role] || "";
+  }
+
+  // Set initial description
+  updateRoleInfo(document.getElementById("role").value);
+</script>
+
+</body>
+</html>

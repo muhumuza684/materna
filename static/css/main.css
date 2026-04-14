@@ -1,0 +1,36 @@
+/* static/css/main.css — starter styles for Maternal Health System */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: Georgia, "Times New Roman", serif;
+    background: #fdf8f5;
+    color: #2c2c2c;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Nav */
+header { background: #7a3e52; padding: 1rem 2rem; }
+nav { display: flex; align-items: center; }
+.brand { color: #fff; font-size: 1.25rem; letter-spacing: .5px; }
+
+/* Main */
+main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 3rem 1rem; }
+.hero { text-align: center; max-width: 540px; }
+.hero h1 { font-size: 2rem; color: #7a3e52; margin-bottom: .75rem; }
+.hero p  { font-size: 1.05rem; line-height: 1.7; color: #555; margin-bottom: 1.5rem; }
+.badge {
+    display: inline-block;
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: .35rem .85rem;
+    border-radius: 999px;
+    font-family: monospace;
+    font-size: .875rem;
+    border: 1px solid #a5d6a7;
+}
+
+/* Footer */
+footer { text-align: center; padding: 1rem; font-size: .8rem; color: #aaa; }

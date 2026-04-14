@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+{% block title %}{{ patient.full_name }} — MaternaHealth{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a href="{{ url_for('patients.list_patients') }}" class="text-decoration-none">Patients</a>
+    </li>
+    <li class="breadcrumb-item active">{{ patient.full_name }}</li>
+  </ol>
+</nav>
+
+<!-- Hero card -->
+<div class="card border-0 shadow-sm mb-4" style="background-color:#7a3e52; color:#fff;">
+  <div class="card-body py-4 px-4 d-flex align-items-center gap-4">
+    <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+         style="width:64px;height:64px;background:rgba(255,255,255,.2);font-size:1.75rem;font-weight:700;">
+      {{ patient.full_name[0].upper() }}
+    </div>
+    <div>
+      <h3 class="mb-1 fw-bold">{{ patient.full_name }}</h3>
+      <div class="d-flex flex-wrap gap-3" style="font-size:.9rem;opacity:.85;">
+        {% if patient.date_of_birth %}
+          <span><i class="bi bi-calendar3"></i> {{ patient.date_of_birth.strftime('%d %b %Y') }}</span>
+        {% endif %}
+        {% if patient.blood_type %}
+          <span><i class="bi bi-droplet-half"></i> {{ patient.blood_type }}</span>
+        {% endif %}
+        {% if patient.contact_info %}
+          <span><i class="bi bi-telephone"></i> {{ patient.contact_info }}</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="ms-auto d-flex gap-2 align-items-center">
+      <a href="{{ url_for('reports.patient_report', patient_id=patient.id) }}"
+         class="btn btn-sm btn-light text-dark">
+        <i class="bi bi-file-earmark-text"></i> Report
+      </a>
+      <small style="opacity:.65;">Registered {{ patient.created_at.strftime('%d %b %Y') }}</small>
+    </div>
+  </div>
+</div>
+
+<!-- Personal & Clinical -->
+<div class="row g-4 mb-4">
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white border-bottom py-3">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-person-badge text-secondary me-1"></i> Personal Details</h6>
+      </div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-5 text-muted fw-normal">Full Name</dt>
+          <dd class="col-sm-7">{{ patient.full_name }}</dd>
+          <dt class="col-sm-5 text-muted fw-normal">Date of Birth</dt>
+          <dd class="col-sm-7">{{ patient.date_of_birth.strftime('%d %B %Y') if patient.date_of_birth else '—' }}</dd>
+          <dt class="col-sm-5 text-muted fw-normal">Blood Type</dt>
+          <dd class="col-sm-7">
+            {% if patient.blood_type %}
+              <span class="badge rounded-pill text-bg-secondary">{{ patient.blood_type }}</span>
+            {% else %}—{% endif %}
+          </dd>
+          <dt class="col-sm-5 text-muted fw-normal">Contact</dt>
+          <dd class="col-sm-7">{{ patient.contact_info or '—' }}</dd>
+          <dt class="col-sm-5 text-muted fw-normal">Emergency Contact</dt>
+          <dd class="col-sm-7">{{ patient.emergency_contact or '—' }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white border-bottom py-3">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-clipboard2-pulse text-secondary me-1"></i> Clinical Information</h6>
+      </div>
+      <div class="card-body">
+        <p class="text-muted small text-uppercase mb-1" style="letter-spacing:.05em;">Medical History</p>
+        <p class="mb-3">{{ patient.medical_history or '—' }}</p>
+        <p class="text-muted small text-uppercase mb-1" style="letter-spacing:.05em;">Allergies</p>
+        <p class="mb-3">{{ patient.allergies or '—' }}</p>
+        <p class="text-muted small text-uppercase mb-1" style="letter-spacing:.05em;">Current Medications</p>
+        <p class="mb-0">{{ patient.medications or '—' }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Pregnancy Records ── -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+    <h6 class="mb-0 fw-semibold"><i class="bi bi-journal-medical text-secondary me-1"></i> Pregnancy Records</h6>
+    <a href="{{ url_for('pregnancies.create_pregnancy', patient_id=patient.id) }}"
+       class="btn btn-sm text-white" style="background-color:#7a3e52;">
+      <i class="bi bi-journal-plus"></i> Add
+    </a>
+  </div>
+  {% set pregnancies = patient.pregnancies.order_by(None).all() | sort(attribute='created_at', reverse=True) %}
+  {% if pregnancies %}
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead style="background-color:#faf5f7;">
+            <tr><th>LMP</th><th>Due Date</th><th>GA (wks)</th><th>Trimester</th><th>Risk</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            {% for pg in pregnancies %}
+            <tr>
+              <td>{{ pg.last_menstrual_period.strftime('%d %b %Y') }}</td>
+              <td>{{ pg.estimated_due_date.strftime('%d %b %Y') if pg.estimated_due_date else '—' }}</td>
+              <td>{{ pg.gestational_age_weeks if pg.gestational_age_weeks is not none else '—' }}</td>
+              <td>{% if pg.trimester %}<span class="badge text-bg-light border">T{{ pg.trimester }}</span>{% else %}—{% endif %}</td>
+              <td>
+                {% if pg.risk_level.value == 'Low' %}<span class="badge text-bg-success">Low</span>
+                {% elif pg.risk_level.value == 'Medium' %}<span class="badge text-bg-warning text-dark">Medium</span>
+                {% else %}<span class="badge text-bg-danger">High</span>{% endif %}
+              </td>
+              <td>
+                {% if pg.status.value == 'Active' %}<span class="badge rounded-pill text-bg-primary">Active</span>
+                {% else %}<span class="badge rounded-pill text-bg-secondary">Completed</span>{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="px-3 py-2 border-top bg-light text-end">
+        <a href="{{ url_for('pregnancies.list_pregnancies', patient_id=patient.id) }}"
+           class="small text-decoration-none" style="color:#7a3e52;">
+          View all {{ pregnancies|length }} record{{ 's' if pregnancies|length != 1 }} <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  {% else %}
+    <div class="card-body text-center py-4 text-muted">
+      <i class="bi bi-journal-x" style="font-size:2rem;color:#c9a0b0;"></i>
+      <p class="mt-2 mb-0">No pregnancy records yet.</p>
+    </div>
+  {% endif %}
+</div>
+
+<!-- ── Vital Signs ── -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+    <h6 class="mb-0 fw-semibold"><i class="bi bi-heart-pulse-fill text-danger me-1"></i> Vital Signs</h6>
+    <a href="{{ url_for('vitals.create_vitals', patient_id=patient.id) }}"
+       class="btn btn-sm btn-outline-danger">
+      <i class="bi bi-plus-lg"></i> Add Vitals
+    </a>
+  </div>
+  {% set vitals = patient.vitals.order_by(None).all() | sort(attribute='recorded_at', reverse=True) %}
+  {% if vitals %}
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr><th class="ps-3">Date/Time</th><th>BP</th><th>HR</th><th>Temp</th><th>SpO₂</th><th class="pe-3">Weight</th></tr>
+          </thead>
+          <tbody>
+            {% for v in vitals[:5] %}
+            <tr>
+              <td class="ps-3 text-muted">{{ v.recorded_at.strftime('%d %b %Y, %H:%M') if v.recorded_at else '—' }}</td>
+              <td>{{ v.blood_pressure or '—' }}</td>
+              <td>{{ v.heart_rate|int if v.heart_rate else '—' }}</td>
+              <td>{{ '%.1f'|format(v.temperature) if v.temperature else '—' }}</td>
+              <td>
+                {% if v.oxygen_saturation %}
+                  <span class="{% if v.oxygen_saturation < 95 %}text-danger fw-semibold{% elif v.oxygen_saturation < 97 %}text-warning{% else %}text-success{% endif %}">
+                    {{ '%.1f'|format(v.oxygen_saturation) }}
+                  </span>
+                {% else %}—{% endif %}
+              </td>
+              <td class="pe-3">{{ '%.1f'|format(v.weight) if v.weight else '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if vitals|length > 5 %}
+      <div class="px-3 py-2 border-top bg-light text-end">
+        <a href="{{ url_for('vitals.list_vitals', patient_id=patient.id) }}"
+           class="small text-decoration-none" style="color:#7a3e52;">
+          View all {{ vitals|length }} readings <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="card-body text-center py-4 text-muted">
+      <i class="bi bi-heart-pulse" style="font-size:2rem;opacity:.3;"></i>
+      <p class="mt-2 mb-0">No vital signs recorded yet.</p>
+    </div>
+  {% endif %}
+</div>
+
+<!-- ── Lab Results ── -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+    <h6 class="mb-0 fw-semibold"><i class="bi bi-flask-fill text-primary me-1"></i> Lab Results</h6>
+    <a href="{{ url_for('labs.create_lab', patient_id=patient.id) }}"
+       class="btn btn-sm btn-outline-primary">
+      <i class="bi bi-plus-lg"></i> Add Lab Result
+    </a>
+  </div>
+  {% set labs = patient.lab_results.order_by(None).all() | sort(attribute='result_date', reverse=True) %}
+  {% if labs %}
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr><th class="ps-3">Test Name</th><th>Value</th><th>Interpretation</th><th class="pe-3">Date</th></tr>
+          </thead>
+          <tbody>
+            {% for lab in labs[:5] %}
+            <tr>
+              <td class="ps-3 fw-medium">{{ lab.test_name }}</td>
+              <td><span class="badge bg-light text-dark border fw-normal px-2">{{ lab.value }}</span></td>
+              <td class="text-muted">{{ lab.interpretation or '—' }}</td>
+              <td class="pe-3 text-muted">{{ lab.result_date.strftime('%d %b %Y') if lab.result_date else '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if labs|length > 5 %}
+      <div class="px-3 py-2 border-top bg-light text-end">
+        <a href="{{ url_for('labs.list_labs', patient_id=patient.id) }}"
+           class="small text-decoration-none" style="color:#7a3e52;">
+          View all {{ labs|length }} results <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="card-body text-center py-4 text-muted">
+      <i class="bi bi-flask" style="font-size:2rem;opacity:.3;"></i>
+      <p class="mt-2 mb-0">No lab results recorded yet.</p>
+    </div>
+  {% endif %}
+</div>
+
+<!-- ── Appointments ── -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+    <h6 class="mb-0 fw-semibold"><i class="bi bi-calendar3 text-secondary me-1"></i> Appointments</h6>
+    <a href="{{ url_for('appointments.create_appointment', patient_id=patient.id) }}"
+       class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-calendar-plus"></i> Schedule
+    </a>
+  </div>
+  {% set appts = patient.appointments.order_by(None).all() | sort(attribute='appointment_date', reverse=True) %}
+  {% if appts %}
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr><th class="ps-3">Date</th><th>Time</th><th>Type</th><th>Provider</th><th class="pe-3">Status</th></tr>
+          </thead>
+          <tbody>
+            {% for a in appts[:5] %}
+            <tr>
+              <td class="ps-3 fw-semibold">{{ a.appointment_date.strftime('%d %b %Y') }}</td>
+              <td>{{ a.appointment_time.strftime('%H:%M') if a.appointment_time else '—' }}</td>
+              <td>{{ a.type or '—' }}</td>
+              <td>{{ a.provider_name or '—' }}</td>
+              <td class="pe-3">
+                <span class="badge bg-{{ a.status_badge }}">{{ a.status }}</span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="px-3 py-2 border-top bg-light text-end">
+        <a href="{{ url_for('appointments.list_appointments', patient_id=patient.id) }}"
+           class="small text-decoration-none" style="color:#7a3e52;">
+          View all {{ appts|length }} appointment{{ 's' if appts|length != 1 }} <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  {% else %}
+    <div class="card-body text-center py-4 text-muted">
+      <i class="bi bi-calendar-x" style="font-size:2rem;opacity:.3;"></i>
+      <p class="mt-2 mb-0">No appointments scheduled yet.</p>
+    </div>
+  {% endif %}
+</div>
+
+<div class="mt-2">
+  <a href="{{ url_for('patients.list_patients') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i> Back to Patients
+  </a>
+</div>
+
+{% endblock %}

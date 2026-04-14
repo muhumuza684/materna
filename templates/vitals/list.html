@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Vital History – {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{{ url_for('patients.list_patients') }}">Patients</a></li>
+      <li class="breadcrumb-item">
+        <a href="{{ url_for('patients.patient_detail', patient_id=patient.id) }}">{{ patient.full_name }}</a>
+      </li>
+      <li class="breadcrumb-item active">Vital History</li>
+    </ol>
+  </nav>
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold mb-0">
+        <i class="bi bi-heart-pulse text-danger me-2"></i>Vital Signs History
+      </h4>
+      <p class="text-muted small mb-0">{{ patient.full_name }}</p>
+    </div>
+    <a href="{{ url_for('vitals.create_vitals', patient_id=patient.id) }}"
+       class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-lg me-1"></i>Add Vitals
+    </a>
+  </div>
+
+  <!-- Table -->
+  {% if vitals %}
+  <div class="card shadow-sm border-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3">Date / Time</th>
+            <th>BP <span class="text-muted fw-normal small">(mmHg)</span></th>
+            <th>HR <span class="text-muted fw-normal small">(bpm)</span></th>
+            <th>Temp <span class="text-muted fw-normal small">(°C)</span></th>
+            <th>SpO₂ <span class="text-muted fw-normal small">(%)</span></th>
+            <th>Weight <span class="text-muted fw-normal small">(kg)</span></th>
+            <th class="pe-3">BMI</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in vitals %}
+          <tr>
+            <td class="ps-3 text-muted small">
+              {{ v.recorded_at.strftime('%d %b %Y, %H:%M') if v.recorded_at else '—' }}
+            </td>
+            <td>
+              {% if v.blood_pressure %}
+                <span class="badge bg-light text-dark border fw-normal">{{ v.blood_pressure }}</span>
+              {% else %}—{% endif %}
+            </td>
+            <td>{{ v.heart_rate | round(0) | int if v.heart_rate else '—' }}</td>
+            <td>{{ '%.1f' % v.temperature if v.temperature else '—' }}</td>
+            <td>
+              {% if v.oxygen_saturation %}
+                {% set spo2 = v.oxygen_saturation %}
+                <span class="fw-semibold {% if spo2 < 95 %}text-danger{% elif spo2 < 97 %}text-warning{% else %}text-success{% endif %}">
+                  {{ '%.1f' % spo2 }}
+                </span>
+              {% else %}—{% endif %}
+            </td>
+            <td>{{ '%.1f' % v.weight if v.weight else '—' }}</td>
+            <td class="pe-3">
+              {% if v.bmi %}
+                {% set bmi = v.bmi %}
+                <span class="badge 
+                  {% if bmi < 18.5 %}bg-info
+                  {% elif bmi < 25 %}bg-success
+                  {% elif bmi < 30 %}bg-warning text-dark
+                  {% else %}bg-danger{% endif %}">
+                  {{ '%.1f' % bmi }}
+                </span>
+              {% else %}—{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="text-center py-5 text-muted">
+    <i class="bi bi-heart-pulse display-4 d-block mb-3 opacity-25"></i>
+    <p class="mb-3">No vital signs recorded yet.</p>
+    <a href="{{ url_for('vitals.create_vitals', patient_id=patient.id) }}"
+       class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-lg me-1"></i>Record First Vitals
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

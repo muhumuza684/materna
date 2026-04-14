@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Record Vital Signs – {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 680px;">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{{ url_for('patients.list_patients') }}">Patients</a></li>
+      <li class="breadcrumb-item">
+        <a href="{{ url_for('patients.patient_detail', patient_id=patient.id) }}">{{ patient.full_name }}</a>
+      </li>
+      <li class="breadcrumb-item active">Record Vitals</li>
+    </ol>
+  </nav>
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- Card -->
+  <div class="card shadow-sm border-0">
+    <div class="card-header bg-primary text-white py-3">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-heart-pulse-fill fs-5"></i>
+        <div>
+          <h5 class="mb-0 fw-semibold">Record Vital Signs</h5>
+          <small class="opacity-75">{{ patient.full_name }} &mdash; {{ patient.patient_id if patient.patient_id else 'ID #' ~ patient.id }}</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body p-4">
+      <form method="POST" action="{{ url_for('vitals.create_vitals', patient_id=patient.id) }}" novalidate>
+
+        <!-- Row 1 -->
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6">
+            <label class="form-label fw-medium">Blood Pressure
+              <span class="text-muted fw-normal small">(mmHg)</span>
+            </label>
+            <input type="text"
+                   name="blood_pressure"
+                   class="form-control"
+                   placeholder="e.g. 120/80"
+                   pattern="\d{2,3}\/\d{2,3}">
+            <div class="form-text">Format: systolic/diastolic</div>
+          </div>
+
+          <div class="col-sm-6">
+            <label class="form-label fw-medium">Heart Rate
+              <span class="text-muted fw-normal small">(bpm)</span>
+            </label>
+            <input type="number"
+                   name="heart_rate"
+                   class="form-control"
+                   placeholder="e.g. 72"
+                   min="30" max="250" step="1">
+          </div>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6">
+            <label class="form-label fw-medium">Temperature
+              <span class="text-muted fw-normal small">(°C)</span>
+            </label>
+            <input type="number"
+                   name="temperature"
+                   class="form-control"
+                   placeholder="e.g. 36.6"
+                   min="30" max="45" step="0.1">
+          </div>
+
+          <div class="col-sm-6">
+            <label class="form-label fw-medium">Oxygen Saturation
+              <span class="text-muted fw-normal small">(%)</span>
+            </label>
+            <input type="number"
+                   name="oxygen_saturation"
+                   class="form-control"
+                   placeholder="e.g. 98"
+                   min="50" max="100" step="0.1">
+          </div>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="row g-3 mb-4">
+          <div class="col-sm-6">
+            <label class="form-label fw-medium">Weight
+              <span class="text-muted fw-normal small">(kg)</span>
+            </label>
+            <input type="number"
+                   name="weight"
+                   class="form-control"
+                   placeholder="e.g. 65.0"
+                   min="20" max="300" step="0.1">
+          </div>
+
+          <div class="col-sm-6">
+            <label class="form-label fw-medium">BMI</label>
+            <input type="number"
+                   name="bmi"
+                   class="form-control"
+                   placeholder="e.g. 24.5"
+                   min="10" max="70" step="0.1">
+            <div class="form-text">Leave blank to auto-calculate if possible</div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex gap-2 justify-content-end border-top pt-3">
+          <a href="{{ url_for('patients.patient_detail', patient_id=patient.id) }}"
+             class="btn btn-outline-secondary">
+            <i class="bi bi-x-lg me-1"></i>Cancel
+          </a>
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-save me-1"></i>Save Vitals
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div><!-- /card -->
+
+</div>
+{% endblock %}

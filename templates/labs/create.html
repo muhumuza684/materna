@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Add Lab Result – {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 640px;">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{{ url_for('patients.list_patients') }}">Patients</a></li>
+      <li class="breadcrumb-item">
+        <a href="{{ url_for('patients.patient_detail', patient_id=patient.id) }}">{{ patient.full_name }}</a>
+      </li>
+      <li class="breadcrumb-item active">Add Lab Result</li>
+    </ol>
+  </nav>
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- Card -->
+  <div class="card shadow-sm border-0">
+    <div class="card-header py-3" style="background:#0d6efd;">
+      <div class="d-flex align-items-center gap-2 text-white">
+        <i class="bi bi-flask-fill fs-5"></i>
+        <div>
+          <h5 class="mb-0 fw-semibold">Add Lab Result</h5>
+          <small class="opacity-75">{{ patient.full_name }}</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body p-4">
+      <form method="POST"
+            action="{{ url_for('labs.create_lab', patient_id=patient.id) }}"
+            novalidate>
+
+        <!-- Test Name -->
+        <div class="mb-3">
+          <label class="form-label fw-medium">
+            Test Name <span class="text-danger">*</span>
+          </label>
+          <input type="text"
+                 name="test_name"
+                 class="form-control"
+                 placeholder="e.g. Hemoglobin, Glucose, Urinalysis"
+                 list="common-tests"
+                 required>
+          <!-- Datalist with common maternal health tests -->
+          <datalist id="common-tests">
+            <option value="Hemoglobin">
+            <option value="Fasting Blood Glucose">
+            <option value="Random Blood Glucose">
+            <option value="HbA1c">
+            <option value="Urinalysis">
+            <option value="Urine Protein">
+            <option value="Blood Group & Rhesus">
+            <option value="HIV Test">
+            <option value="Syphilis VDRL">
+            <option value="Hepatitis B Surface Antigen">
+            <option value="Malaria RDT">
+            <option value="Full Blood Count">
+            <option value="Serum Ferritin">
+            <option value="Thyroid Function (TSH)">
+            <option value="Pap Smear">
+          </datalist>
+          <div class="form-text">Start typing or choose a common test above.</div>
+        </div>
+
+        <!-- Value + Date side by side -->
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6">
+            <label class="form-label fw-medium">
+              Result Value <span class="text-danger">*</span>
+            </label>
+            <input type="text"
+                   name="value"
+                   class="form-control"
+                   placeholder="e.g. 11.2 g/dL, Positive, Normal"
+                   required>
+            <div class="form-text">Include units where applicable.</div>
+          </div>
+
+          <div class="col-sm-6">
+            <label class="form-label fw-medium">Result Date</label>
+            <input type="date"
+                   name="result_date"
+                   class="form-control"
+                   value="{{ today }}">
+          </div>
+        </div>
+
+        <!-- Interpretation -->
+        <div class="mb-4">
+          <label class="form-label fw-medium">
+            Interpretation
+            <span class="text-muted fw-normal small">(optional)</span>
+          </label>
+          <textarea name="interpretation"
+                    class="form-control"
+                    rows="3"
+                    placeholder="e.g. Below normal range, refer for further review..."></textarea>
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex gap-2 justify-content-end border-top pt-3">
+          <a href="{{ url_for('patients.patient_detail', patient_id=patient.id) }}"
+             class="btn btn-outline-secondary">
+            <i class="bi bi-x-lg me-1"></i>Cancel
+          </a>
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-save me-1"></i>Save Result
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

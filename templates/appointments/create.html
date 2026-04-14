@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Schedule Appointment — {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  {# ── breadcrumb ── #}
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('patients.list_patients') }}">Patients</a></li>
+      <li class="breadcrumb-item">
+        <a href="{{ url_for('patients.patient_detail', patient_id=patient.id) }}">{{ patient.full_name }}</a>
+      </li>
+      <li class="breadcrumb-item">
+        <a href="{{ url_for('appointments.list_appointments', patient_id=patient.id) }}">Appointments</a>
+      </li>
+      <li class="breadcrumb-item active">Schedule</li>
+    </ol>
+  </nav>
+
+  {# ── flash messages ── #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+
+      <div class="card shadow-sm border-0">
+        {# card header #}
+        <div class="card-header bg-primary text-white py-3">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-calendar-plus fs-5"></i>
+            <div>
+              <h5 class="mb-0">Schedule Appointment</h5>
+              <small class="opacity-75">Patient: {{ patient.full_name }}</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body p-4">
+          <form method="POST"
+                action="{{ url_for('appointments.create_appointment', patient_id=patient.id) }}"
+                novalidate>
+
+            {# ── date & time ── #}
+            <div class="row g-3 mb-3">
+              <div class="col-sm-6">
+                <label for="appointment_date" class="form-label fw-semibold">
+                  Date <span class="text-danger">*</span>
+                </label>
+                <input
+                  type="date"
+                  id="appointment_date"
+                  name="appointment_date"
+                  class="form-control"
+                  value="{{ form_data.get('appointment_date', '') }}"
+                  required
+                >
+              </div>
+              <div class="col-sm-6">
+                <label for="appointment_time" class="form-label fw-semibold">
+                  Time <span class="text-danger">*</span>
+                </label>
+                <input
+                  type="time"
+                  id="appointment_time"
+                  name="appointment_time"
+                  class="form-control"
+                  value="{{ form_data.get('appointment_time', '') }}"
+                  required
+                >
+              </div>
+            </div>
+
+            {# ── type ── #}
+            <div class="mb-3">
+              <label for="type" class="form-label fw-semibold">
+                Appointment Type <span class="text-danger">*</span>
+              </label>
+              <select id="type" name="type" class="form-select" required>
+                <option value="" disabled {% if not form_data.get('type') %}selected{% endif %}>
+                  — Select type —
+                </option>
+                {% for t in appointment_types %}
+                  <option value="{{ t }}"
+                    {% if form_data.get('type') == t %}selected{% endif %}>
+                    {{ t }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            {# ── provider ── #}
+            <div class="mb-3">
+              <label for="provider_name" class="form-label fw-semibold">
+                Provider / Doctor <span class="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                id="provider_name"
+                name="provider_name"
+                class="form-control"
+                placeholder="e.g. Dr. Amara Mensah"
+                value="{{ form_data.get('provider_name', '') }}"
+                required
+              >
+            </div>
+
+            {# ── notes (optional) ── #}
+            <div class="mb-4">
+              <label for="notes" class="form-label fw-semibold">Notes <span class="text-muted small">(optional)</span></label>
+              <textarea
+                id="notes"
+                name="notes"
+                class="form-control"
+                rows="3"
+                placeholder="Any additional information…"
+              >{{ form_data.get('notes', '') }}</textarea>
+            </div>
+
+            {# ── status note ── #}
+            <div class="alert alert-light border d-flex align-items-center gap-2 py-2 mb-4">
+              <i class="bi bi-info-circle text-primary"></i>
+              <small>New appointments are automatically set to <strong>Pending</strong> status.</small>
+            </div>
+
+            {# ── actions ── #}
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary px-4">
+                <i class="bi bi-calendar-check me-1"></i> Schedule
+              </button>
+              <a href="{{ url_for('appointments.list_appointments', patient_id=patient.id) }}"
+                 class="btn btn-outline-secondary px-4">
+                Cancel
+              </a>
+            </div>
+
+          </form>
+        </div>{# /card-body #}
+      </div>{# /card #}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

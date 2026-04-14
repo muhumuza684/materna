@@ -1,0 +1,758 @@
+{% extends "base.html" %}
+{% block title %}Health Report — {{ patient.full_name }}{% endblock %}
+
+{# ══════════════════════════════════════════════════════════════
+   PRINT + SCREEN STYLES
+══════════════════════════════════════════════════════════════ #}
+{% block head_extra %}
+<style>
+  /* ── Google Fonts ── */
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  /* ── CSS tokens ── */
+  :root {
+    --rpt-primary:    #1a4f6e;
+    --rpt-accent:     #2a9d8f;
+    --rpt-soft:       #f0f6fa;
+    --rpt-border:     #d6e4ed;
+    --rpt-text:       #1e2d3a;
+    --rpt-muted:      #6b8394;
+    --rpt-danger:     #c0392b;
+    --rpt-warning:    #e67e22;
+    --rpt-success:    #27ae60;
+    --rpt-radius:     10px;
+    --rpt-shadow:     0 2px 12px rgba(26,79,110,.10);
+  }
+
+  /* ── screen wrapper ── */
+  .rpt-wrap {
+    font-family: 'DM Sans', sans-serif;
+    color: var(--rpt-text);
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1rem 4rem;
+  }
+
+  /* ── report header ── */
+  .rpt-header {
+    background: linear-gradient(135deg, var(--rpt-primary) 0%, #266a91 100%);
+    color: #fff;
+    border-radius: var(--rpt-radius);
+    padding: 2.2rem 2.5rem 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--rpt-shadow);
+  }
+  .rpt-header .facility {
+    font-size: .78rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    opacity: .75;
+    margin-bottom: .3rem;
+  }
+  .rpt-header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    font-weight: 400;
+    margin: 0 0 .2rem;
+  }
+  .rpt-header .sub {
+    font-size: .88rem;
+    opacity: .8;
+  }
+  .rpt-stat-pill {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 8px;
+    padding: .55rem 1.1rem;
+    min-width: 80px;
+    text-align: center;
+  }
+  .rpt-stat-pill .num  { font-size: 1.55rem; font-weight: 600; line-height: 1; }
+  .rpt-stat-pill .lbl  { font-size: .7rem; opacity: .75; margin-top: .15rem; text-transform: uppercase; letter-spacing: .06em; }
+
+  /* ── section card ── */
+  .rpt-section {
+    background: #fff;
+    border: 1px solid var(--rpt-border);
+    border-radius: var(--rpt-radius);
+    margin-bottom: 1.6rem;
+    box-shadow: var(--rpt-shadow);
+    overflow: hidden;
+  }
+  .rpt-section-head {
+    background: var(--rpt-soft);
+    border-bottom: 1px solid var(--rpt-border);
+    padding: .9rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+  }
+  .rpt-section-head .icon {
+    width: 32px; height: 32px;
+    background: var(--rpt-primary);
+    color: #fff;
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .9rem;
+    flex-shrink: 0;
+  }
+  .rpt-section-head h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.05rem;
+    font-weight: 400;
+    margin: 0;
+    color: var(--rpt-primary);
+  }
+  .rpt-section-head .badge-count {
+    margin-left: auto;
+    font-size: .72rem;
+    background: var(--rpt-primary);
+    color: #fff;
+    border-radius: 20px;
+    padding: .18rem .65rem;
+  }
+  .rpt-section-body { padding: 1.4rem 1.5rem; }
+
+  /* ── info grid ── */
+  .rpt-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.1rem 1.8rem;
+  }
+  .rpt-field label {
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--rpt-muted);
+    display: block;
+    margin-bottom: .2rem;
+  }
+  .rpt-field span {
+    font-size: .95rem;
+    font-weight: 500;
+    color: var(--rpt-text);
+  }
+  .rpt-field span.empty { color: var(--rpt-muted); font-weight: 400; font-style: italic; }
+
+  /* ── pregnancy card ── */
+  .preg-card {
+    border: 1px solid var(--rpt-border);
+    border-radius: 8px;
+    padding: 1.1rem 1.3rem;
+    margin-bottom: 1rem;
+    position: relative;
+  }
+  .preg-card:last-child { margin-bottom: 0; }
+  .preg-card .preg-index {
+    position: absolute;
+    top: -11px; left: 1.1rem;
+    background: var(--rpt-primary);
+    color: #fff;
+    font-size: .7rem;
+    border-radius: 20px;
+    padding: .15rem .7rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+  }
+
+  /* ── tables ── */
+  .rpt-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .9rem;
+  }
+  .rpt-table thead th {
+    background: var(--rpt-soft);
+    color: var(--rpt-primary);
+    font-weight: 600;
+    font-size: .78rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .65rem .9rem;
+    border-bottom: 2px solid var(--rpt-border);
+    white-space: nowrap;
+  }
+  .rpt-table tbody td {
+    padding: .7rem .9rem;
+    border-bottom: 1px solid #edf3f7;
+    vertical-align: middle;
+  }
+  .rpt-table tbody tr:last-child td { border-bottom: none; }
+  .rpt-table tbody tr:hover td { background: #f8fbfd; }
+
+  /* ── empty state ── */
+  .rpt-empty {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--rpt-muted);
+  }
+  .rpt-empty i { font-size: 2rem; opacity: .35; display: block; margin-bottom: .6rem; }
+
+  /* ── footer ── */
+  .rpt-footer {
+    text-align: center;
+    color: var(--rpt-muted);
+    font-size: .8rem;
+    margin-top: 2.5rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--rpt-border);
+  }
+
+  /* ── action bar (screen only) ── */
+  .rpt-actions {
+    display: flex;
+    gap: .75rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+
+  /* ══════════════════════════════════════════
+     PRINT STYLES
+  ══════════════════════════════════════════ */
+  @media print {
+    /* hide everything except report */
+    body > *:not(.rpt-print-root) { display: none !important; }
+    .rpt-print-root { display: block !important; }
+
+    /* hide nav, sidebar, action bar */
+    nav, .navbar, .sidebar, footer,
+    .rpt-actions, .rpt-no-print { display: none !important; }
+
+    body { background: #fff !important; font-size: 11pt; }
+    .rpt-wrap { max-width: 100%; padding: 0; }
+
+    .rpt-header {
+      background: var(--rpt-primary) !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      border-radius: 0;
+      padding: 1.2rem 1.4rem 1rem;
+    }
+    .rpt-section { box-shadow: none; page-break-inside: avoid; }
+    .rpt-section-head { background: var(--rpt-soft) !important;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact; }
+    .rpt-table thead th { background: var(--rpt-soft) !important;
+                          -webkit-print-color-adjust: exact;
+                          print-color-adjust: exact; }
+    a { text-decoration: none !important; color: inherit !important; }
+    .badge { border: 1px solid #ccc !important; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{# ── breadcrumb (hidden on print) ── #}
+<div class="container rpt-no-print">
+  <nav aria-label="breadcrumb" class="pt-3 pb-0">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{{ url_for('patients.list_patients') }}">Patients</a></li>
+      <li class="breadcrumb-item">
+        <a href="{{ url_for('patients.patient_detail', patient_id=patient.id) }}">{{ patient.full_name }}</a>
+      </li>
+      <li class="breadcrumb-item active">Health Report</li>
+    </ol>
+  </nav>
+</div>
+
+{# ── action bar (hidden on print) ── #}
+<div class="container rpt-no-print">
+  <div class="rpt-actions mt-2">
+    <button onclick="window.print()" class="btn btn-primary btn-sm px-4">
+      <i class="bi bi-printer me-1"></i> Print Report
+    </button>
+    <a href="{{ url_for('patients.patient_detail', patient_id=patient.id) }}"
+       class="btn btn-outline-secondary btn-sm px-3">
+      <i class="bi bi-arrow-left me-1"></i> Back to Patient
+    </a>
+    <span class="ms-auto text-muted small">
+      <i class="bi bi-clock me-1"></i>Generated: {{ summary.generated_on }}
+    </span>
+  </div>
+</div>
+
+{# ══════════════════════════════════════════════════════════════
+   PRINTABLE REPORT ROOT
+══════════════════════════════════════════════════════════════ #}
+<div class="container rpt-print-root">
+<div class="rpt-wrap">
+
+  {# ── REPORT HEADER ── #}
+  <div class="rpt-header">
+    <div class="facility">Maternal Health Management System</div>
+    <h1>Patient Health Report</h1>
+    <div class="sub mb-3">
+      Prepared for: <strong>{{ patient.full_name }}</strong>
+      &nbsp;·&nbsp; Patient ID: <strong>#{{ patient.id }}</strong>
+      &nbsp;·&nbsp; {{ summary.generated_on }}
+    </div>
+
+    {# stat pills #}
+    <div class="d-flex flex-wrap gap-2 mt-3">
+      <div class="rpt-stat-pill">
+        <span class="num">{{ summary.pregnancies }}</span>
+        <span class="lbl">Pregnancies</span>
+      </div>
+      <div class="rpt-stat-pill">
+        <span class="num">{{ summary.vitals }}</span>
+        <span class="lbl">Vital Readings</span>
+      </div>
+      <div class="rpt-stat-pill">
+        <span class="num">{{ summary.labs }}</span>
+        <span class="lbl">Lab Results</span>
+      </div>
+      <div class="rpt-stat-pill">
+        <span class="num">{{ summary.appointments }}</span>
+        <span class="lbl">Appointments</span>
+      </div>
+      <div class="rpt-stat-pill">
+        <span class="num">{{ summary.pending_appts }}</span>
+        <span class="lbl">Pending Appts</span>
+      </div>
+    </div>
+  </div>
+
+  {# ══════════════════════════════════════════
+     SECTION 1 — PATIENT INFORMATION
+  ══════════════════════════════════════════ #}
+  <div class="rpt-section">
+    <div class="rpt-section-head">
+      <span class="icon"><i class="bi bi-person-fill"></i></span>
+      <h2>Patient Information</h2>
+    </div>
+    <div class="rpt-section-body">
+      <div class="rpt-info-grid">
+
+        <div class="rpt-field">
+          <label>Full Name</label>
+          <span>{{ patient.full_name or '—' }}</span>
+        </div>
+
+        <div class="rpt-field">
+          <label>Date of Birth</label>
+          <span>
+            {% if patient.date_of_birth %}
+              {{ patient.date_of_birth.strftime('%d %B %Y') }}
+            {% else %}
+              <span class="empty">Not recorded</span>
+            {% endif %}
+          </span>
+        </div>
+
+        <div class="rpt-field">
+          <label>Blood Type</label>
+          <span>
+            {% if patient.blood_type %}
+              <span class="badge bg-danger px-2">{{ patient.blood_type }}</span>
+            {% else %}
+              <span class="empty">Not recorded</span>
+            {% endif %}
+          </span>
+        </div>
+
+        <div class="rpt-field">
+          <label>Phone</label>
+          <span>{{ patient.contact_info or '—' }}</span>
+        </div>
+
+        <div class="rpt-field">
+          <label>Email</label>
+          <span>{{ '' or '—' }}</span>
+        </div>
+
+        <div class="rpt-field">
+          <label>Address</label>
+          <span>{{ '' or '—' }}</span>
+        </div>
+
+      </div>
+
+      {# ── medical history / allergies / medications ── #}
+      <hr class="my-3" style="border-color:var(--rpt-border)">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="rpt-field">
+            <label>Medical History</label>
+            <span style="white-space:pre-line;font-size:.88rem;font-weight:400;">
+              {{ patient.medical_history or '—' }}
+            </span>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="rpt-field">
+            <label>Known Allergies</label>
+            <span style="white-space:pre-line;font-size:.88rem;font-weight:400;">
+              {{ patient.allergies or '—' }}
+            </span>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="rpt-field">
+            <label>Current Medications</label>
+            <span style="white-space:pre-line;font-size:.88rem;font-weight:400;">
+              {{ patient.medications or '—' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  {# ══════════════════════════════════════════
+     SECTION 2 — PREGNANCY RECORDS
+  ══════════════════════════════════════════ #}
+  <div class="rpt-section">
+    <div class="rpt-section-head">
+      <span class="icon"><i class="bi bi-heart-pulse-fill"></i></span>
+      <h2>Pregnancy Records</h2>
+      <span class="badge-count">{{ pregnancy_data | length }}</span>
+    </div>
+    <div class="rpt-section-body">
+
+      {% if pregnancy_data %}
+        {% for pd in pregnancy_data %}
+        <div class="preg-card">
+          <div class="preg-index">Pregnancy {{ loop.index }}</div>
+          <div class="rpt-info-grid mt-2">
+
+            <div class="rpt-field">
+              <label>Last Menstrual Period (LMP)</label>
+              <span>
+                {% if pd.obj.last_menstrual_period %}
+                  {{ pd.obj.last_menstrual_period.strftime('%d %b %Y') }}
+                {% else %}<span class="empty">—</span>{% endif %}
+              </span>
+            </div>
+
+            <div class="rpt-field">
+              <label>Expected Due Date</label>
+              <span>
+                {% if pd.obj.estimated_due_date %}
+                  {{ pd.obj.estimated_due_date.strftime('%d %b %Y') }}
+                {% else %}<span class="empty">—</span>{% endif %}
+              </span>
+            </div>
+
+            <div class="rpt-field">
+              <label>Gestational Age</label>
+              <span>{{ pd.gestational_age or '—' }}</span>
+            </div>
+
+            <div class="rpt-field">
+              <label>Trimester</label>
+              <span>{{ pd.trimester or '—' }}</span>
+            </div>
+
+            <div class="rpt-field">
+              <label>Risk Level</label>
+              <span>
+                {% if pd.obj.risk_level %}
+                  <span class="badge bg-{{ pd.risk_colour }}">{{ pd.obj.risk_level }}</span>
+                {% else %}<span class="empty">—</span>{% endif %}
+              </span>
+            </div>
+
+            <div class="rpt-field">
+              <label>Status</label>
+              <span>
+                {% if pd.obj.status %}
+                  <span class="badge bg-secondary">{{ pd.obj.status }}</span>
+                {% else %}<span class="empty">—</span>{% endif %}
+              </span>
+            </div>
+
+            {% if pd.obj.notes %}
+            <div class="rpt-field" style="grid-column: 1 / -1">
+              <label>Notes</label>
+              <span style="font-size:.88rem;font-weight:400;">{{ pd.obj.notes }}</span>
+            </div>
+            {% endif %}
+
+          </div>
+        </div>
+        {% endfor %}
+
+      {% else %}
+        <div class="rpt-empty">
+          <i class="bi bi-clipboard2-x"></i>
+          No pregnancy records found.
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+
+  {# ══════════════════════════════════════════
+     SECTION 3 — VITAL SIGNS HISTORY
+  ══════════════════════════════════════════ #}
+  <div class="rpt-section">
+    <div class="rpt-section-head">
+      <span class="icon"><i class="bi bi-activity"></i></span>
+      <h2>Vital Signs History</h2>
+      <span class="badge-count">{{ vitals | length }}</span>
+    </div>
+    <div class="rpt-section-body p-0">
+
+      {% if vitals %}
+      <div class="table-responsive">
+        <table class="rpt-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Blood Pressure</th>
+              <th>Heart Rate</th>
+              <th>Temperature</th>
+              <th>Weight</th>
+              <th>O₂ Saturation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for v in vitals %}
+            <tr>
+              <td>
+                {% if v.recorded_at %}
+                  <span class="fw-semibold">{{ v.recorded_at.strftime('%d %b %Y') }}</span><br>
+                  <small class="text-muted">{{ v.recorded_at.strftime('%H:%M') }}</small>
+                {% else %}—{% endif %}
+              </td>
+
+              <td>
+                {% if v.systolic and v.diastolic %}
+                  {{ v.systolic }}/{{ v.diastolic }}
+                  <small class="text-muted">mmHg</small>
+                {% elif v.blood_pressure %}
+                  {{ v.blood_pressure }}
+                {% else %}—{% endif %}
+              </td>
+
+              <td>
+                {% if v.heart_rate %}
+                  {{ v.heart_rate }} <small class="text-muted">bpm</small>
+                {% else %}—{% endif %}
+              </td>
+
+              <td>
+                {% if v.temperature %}
+                  {{ v.temperature }}
+                  <small class="text-muted">°C</small>
+                {% else %}—{% endif %}
+              </td>
+
+              <td>
+                {% if v.weight %}
+                  {{ v.weight }} <small class="text-muted">kg</small>
+                {% else %}—{% endif %}
+              </td>
+
+              <td>
+                {% if v.oxygen_saturation %}
+                  {% set spo2 = v.oxygen_saturation | float %}
+                  <span class="badge bg-{% if spo2 >= 95 %}success{% elif spo2 >= 90 %}warning{% else %}danger{% endif %}">
+                    {{ v.oxygen_saturation }}%
+                  </span>
+                {% else %}—{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% else %}
+        <div class="rpt-empty">
+          <i class="bi bi-clipboard2-pulse"></i>
+          No vital sign readings recorded.
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+
+  {# ══════════════════════════════════════════
+     SECTION 4 — LAB RESULTS
+  ══════════════════════════════════════════ #}
+  <div class="rpt-section">
+    <div class="rpt-section-head">
+      <span class="icon"><i class="bi bi-droplet-fill"></i></span>
+      <h2>Lab Results</h2>
+      <span class="badge-count">{{ labs | length }}</span>
+    </div>
+    <div class="rpt-section-body p-0">
+
+      {% if labs %}
+      <div class="table-responsive">
+        <table class="rpt-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Test Name</th>
+              <th>Value</th>
+              <th>Reference Range</th>
+              <th>Interpretation</th>
+              <th>Lab / Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for lab in labs %}
+            <tr>
+              <td>
+                {% set lab_date = lab.result_date %}
+                {% if lab_date %}
+                  <span class="fw-semibold">{{ lab_date.strftime('%d %b %Y') }}</span>
+                {% else %}—{% endif %}
+              </td>
+
+              <td class="fw-semibold">{{ lab.test_name or '—' }}</td>
+
+              <td>
+                {{ lab.value or '—' }}
+                {% if '' %}<small class="text-muted">{{ '' }}</small>{% endif %}
+              </td>
+
+              <td class="text-muted small">{{ '—' }}</td>
+
+              <td>
+                {% set interp = lab.interpretation or '' %}
+                {% if interp %}
+                  {% if 'normal' in interp | lower or 'negative' in interp | lower %}
+                    <span class="badge bg-success">{{ interp }}</span>
+                  {% elif 'high' in interp | lower or 'elevated' in interp | lower or 'abnormal' in interp | lower or 'positive' in interp | lower %}
+                    <span class="badge bg-danger">{{ interp }}</span>
+                  {% elif 'borderline' in interp | lower or 'low' in interp | lower %}
+                    <span class="badge bg-warning text-dark">{{ interp }}</span>
+                  {% else %}
+                    <span class="badge bg-secondary">{{ interp }}</span>
+                  {% endif %}
+                {% else %}—{% endif %}
+              </td>
+
+              <td class="text-muted small">{{ '—' or '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% else %}
+        <div class="rpt-empty">
+          <i class="bi bi-droplet"></i>
+          No lab results recorded.
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+
+  {# ══════════════════════════════════════════
+     SECTION 5 — APPOINTMENTS
+  ══════════════════════════════════════════ #}
+  <div class="rpt-section">
+    <div class="rpt-section-head">
+      <span class="icon"><i class="bi bi-calendar3"></i></span>
+      <h2>Appointments</h2>
+      <span class="badge-count">{{ appointments | length }}</span>
+    </div>
+    <div class="rpt-section-body p-0">
+
+      {% if appointments %}
+      <div class="table-responsive">
+        <table class="rpt-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Type</th>
+              <th>Provider</th>
+              <th>Notes</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for appt in appointments %}
+            <tr>
+              <td class="text-muted small">{{ loop.index }}</td>
+
+              <td class="fw-semibold">
+                {{ appt.appointment_date.strftime('%d %b %Y') }}
+              </td>
+
+              <td>{{ appt.appointment_time.strftime('%H:%M') }}</td>
+
+              <td>
+                {% set type_colours = {
+                  'Antenatal':  'primary',
+                  'Checkup':    'info',
+                  'Emergency':  'danger',
+                  'Postnatal':  'secondary',
+                  'Ultrasound': 'dark'
+                } %}
+                <span class="badge rounded-pill bg-{{ type_colours.get(appt.type, 'secondary') }}">
+                  {{ appt.type }}
+                </span>
+              </td>
+
+              <td>{{ appt.provider_name }}</td>
+
+              <td class="text-muted small" style="max-width:160px;">
+                {% if appt.notes %}
+                  {{ appt.notes | truncate(45) }}
+                {% else %}—{% endif %}
+              </td>
+
+              <td>
+                <span class="badge bg-{{ appt_status_colour(appt.status) }}">
+                  {{ appt.status }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% else %}
+        <div class="rpt-empty">
+          <i class="bi bi-calendar-x"></i>
+          No appointments scheduled.
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+
+  {# ── report footer ── #}
+  <div class="rpt-footer rpt-no-print">
+    <p>
+      This report is auto-generated by the Maternal Health Management System.<br>
+      For clinical decisions, always verify data with the attending clinician.
+    </p>
+    <p class="mt-1">Generated on {{ summary.generated_on }} &nbsp;·&nbsp; Patient #{{ patient.id }}</p>
+  </div>
+
+  {# print-only footer #}
+  <div style="display:none;" class="rpt-print-footer">
+    <div style="text-align:center;font-size:9pt;color:#888;border-top:1px solid #ccc;margin-top:16pt;padding-top:8pt;">
+      Maternal Health Management System — Confidential Patient Record<br>
+      Generated {{ summary.generated_on }} · Patient #{{ patient.id }} · {{ patient.full_name }}
+    </div>
+  </div>
+  <style>
+    @media print { .rpt-print-footer { display: block !important; } }
+  </style>
+
+</div>{# /rpt-wrap #}
+</div>{# /container #}
+
+{% endblock %}
