@@ -1,6 +1,6 @@
 """
 routes/auth_routes.py
-Authentication Blueprint: register, login, logout + RBAC decorators.
+Improved Authentication Blueprint with proper multi-user support.
 """
 
 from functools import wraps
@@ -60,22 +60,34 @@ def register():
     existing_users = User.query.count()
     current = get_current_user()
 
+    # FIRST USER → becomes Admin automatically
+    if existing_users == 0:
+        default_role = Role.ADMIN
+    else:
+        default_role = request.form.get("role", Role.NURSE)
+
+    # Restrict registration to Admin after first user
     if existing_users > 0 and (current is None or not current.is_admin):
-        flash("Only administrators can register new users.", "danger")
+        flash("Only administrators can create new users.", "danger")
         return redirect(url_for("auth.login"))
 
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "").strip()
         confirm  = request.form.get("confirm_password", "").strip()
-        role     = request.form.get("role", Role.NURSE)
+        role     = default_role
 
         error = None
-        if not username:          error = "Username is required."
-        elif not password:        error = "Password is required."
-        elif len(password) < 8:   error = "Password must be at least 8 characters."
-        elif password != confirm:  error = "Passwords do not match."
-        elif role not in Role.ALL: error = "Invalid role."
+        if not username:
+            error = "Username is required."
+        elif not password:
+            error = "Password is required."
+        elif len(password) < 4:
+            error = "Password must be at least 4 characters."
+        elif password != confirm:
+            error = "Passwords do not match."
+        elif role not in Role.ALL:
+            error = "Invalid role."
         elif User.query.filter_by(username=username).first():
             error = f"Username '{username}' is already taken."
 
@@ -85,8 +97,10 @@ def register():
 
         user = User(username=username, role=role)
         user.set_password(password)
+
         db.session.add(user)
         db.session.commit()
+
         flash(f"Account for '{username}' created successfully.", "success")
         return redirect(url_for("auth.login"))
 
@@ -103,6 +117,7 @@ def login():
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "").strip()
+
         user = User.query.filter_by(username=username).first()
 
         if user is None or not user.check_password(password):
@@ -114,14 +129,16 @@ def login():
             return render_template("auth/login.html", no_users_yet=no_users_yet)
 
         session.clear()
-        session["user_id"]   = user.id
+        session["user_id"] = user.id
         session["user_role"] = user.role
+
         user.last_login = datetime.utcnow()
         db.session.commit()
 
         flash(f"Welcome back, {user.username}!", "success")
+
         next_page = request.args.get("next")
-        return redirect(next_page or url_for("patients.list_patients"))
+        return redirect(next_page or url_for("main.index"))
 
     return render_template("auth/login.html", no_users_yet=no_users_yet)
 
@@ -144,13 +161,17 @@ def user_list():
 @roles_required(Role.ADMIN)
 def toggle_user(user_id):
     user = db.session.get(User, user_id)
+
     if user is None:
         flash("User not found.", "danger")
+
     elif user.id == session["user_id"]:
         flash("You cannot deactivate your own account.", "warning")
+
     else:
         user.is_active = not user.is_active
         db.session.commit()
         state = "activated" if user.is_active else "deactivated"
         flash(f"User '{user.username}' {state}.", "success")
+
     return redirect(url_for("auth.user_list"))
